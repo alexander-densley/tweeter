@@ -94,7 +94,6 @@ public class FeedFragment extends Fragment implements FeedPresenter.FeedView {
 
         feedRecyclerView.addOnScrollListener(new FeedRecyclerViewPaginationScrollListener(layoutManager));
 
-        // TODO add presenter and the loadmore items call
         presenter = new FeedPresenter(this);
         feedRecyclerViewAdapter.loadMoreItems();
         return view;
@@ -155,7 +154,7 @@ public class FeedFragment extends Fragment implements FeedPresenter.FeedView {
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    presenter.getUserProfile(userAlias);
+                    presenter.getUserProfile(userAlias.getText().toString());
                     Toast.makeText(getContext(), "Getting user's profile...", Toast.LENGTH_LONG).show();
                 }
             });
@@ -191,7 +190,7 @@ public class FeedFragment extends Fragment implements FeedPresenter.FeedView {
                             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(clickable));
                             startActivity(intent);
                         } else {
-                            presenter.getUserProfile(userAlias);
+                            presenter.getUserProfile(clickable);
                             Toast.makeText(getContext(), "Getting user's profile...", Toast.LENGTH_LONG).show();
                         }
                     }
