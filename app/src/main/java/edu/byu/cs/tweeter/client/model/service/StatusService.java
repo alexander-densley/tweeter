@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import edu.byu.cs.tweeter.client.backgroundTask.GetFeedTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetStoryTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetUserTask;
+import edu.byu.cs.tweeter.client.backgroundTask.PostStatusTask;
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.presenter.StoryPresenter;
 import edu.byu.cs.tweeter.client.view.main.MainActivity;
@@ -23,6 +24,41 @@ import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class StatusService {
+
+    public interface PostStatusObserver{
+        void displayErrorMessage(String message);
+        void displayException(Exception ex);
+        void displayPosting();
+    }
+
+    public void poastStatus(AuthToken currUserAuthToken, User currUser, String post, String formattedDateTime, List<String> parseURLs,
+                            List<String> parseMentions, PostStatusObserver postStatusObserver){
+        Status newStatus = new Status(post, currUser, formattedDateTime, parseURLs, parseMentions);
+        PostStatusTask statusTask = new PostStatusTask(currUserAuthToken,
+                newStatus, new PostStatusHandler(postStatusObserver));
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(statusTask);
+    }
+
+    private class PostStatusHandler extends Handler {
+        private final PostStatusObserver observer;
+        public PostStatusHandler(PostStatusObserver observer){
+            this.observer = observer;
+        }
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            boolean success = msg.getData().getBoolean(PostStatusTask.SUCCESS_KEY);
+            if (success) {
+                observer.displayPosting();
+            } else if (msg.getData().containsKey(PostStatusTask.MESSAGE_KEY)) {
+                String message = msg.getData().getString(PostStatusTask.MESSAGE_KEY);
+                observer.displayErrorMessage(message);
+            } else if (msg.getData().containsKey(PostStatusTask.EXCEPTION_KEY)) {
+                Exception ex = (Exception) msg.getData().getSerializable(PostStatusTask.EXCEPTION_KEY);
+                observer.displayException(ex);
+            }
+        }
+    }
 
 
     public interface GetStoryObserver{
