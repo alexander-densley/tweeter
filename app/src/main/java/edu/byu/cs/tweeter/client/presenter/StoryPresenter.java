@@ -1,80 +1,90 @@
 package edu.byu.cs.tweeter.client.presenter;
 
-import java.util.List;
 
+import android.os.Handler;
+import android.os.Message;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import edu.byu.cs.tweeter.client.backgroundTask.GetStoryTask;
+import edu.byu.cs.tweeter.client.backgroundTask.GetUserTask;
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.StatusService;
 import edu.byu.cs.tweeter.client.model.service.UserService;
+import edu.byu.cs.tweeter.client.view.main.story.StoryFragment;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class FeedPresenter {
-    private FeedView view;
+public class StoryPresenter {
+    private StoryView view;
     private StatusService statusService;
     private UserService userService;
     private static final int PAGE_SIZE = 10;
     private Status lastStatus;
-    private boolean hasMorePages;
 
-    private boolean isLoading = false;
-
-
-
-
-    public interface FeedView {
-        void displayMessage(String message);
-        void setLoadingFooter(boolean value);
-        void addFeed(List<Status> statuses);
-
-        void displayUserInfo(User user);
-    }
-
-    public FeedPresenter(FeedView view){
-        this.view = view;
-        statusService = new StatusService();
-        userService = new UserService();
+    public boolean HasMorePages() {
+        return hasMorePages;
     }
 
     public boolean isLoading() {
         return isLoading;
     }
-    public boolean HasMorePages() {
-        return hasMorePages;
+
+    private boolean hasMorePages;
+    private boolean isLoading = false;
+
+    public interface StoryView{
+        void displayMessage(String message);
+        void setLoadingFooter(boolean value);
+        void addStory(List<Status> statuses);
+
+        void displayUserInfo(User user);
     }
 
+    public StoryPresenter(StoryView view){
+        this.view = view;
+        statusService = new StatusService();
+        userService = new UserService();
+    }
 
-    private class GetFeedObserver implements StatusService.GetFeedObserver{
+    private class GetStoryObserver implements StatusService.GetStoryObserver {
 
         @Override
-        public void addFeed(List<Status> statuses, boolean hasMorePages) {
+        public void addStory(List<Status> statuses, boolean hasMorePages) {
             isLoading = false;
             view.setLoadingFooter(false);
             lastStatus = (statuses.size() > 0) ? statuses.get(statuses.size() - 1) : null;
-            view.addFeed(statuses);
-            FeedPresenter.this.hasMorePages = hasMorePages;
+            view.addStory(statuses);
+            StoryPresenter.this.hasMorePages = hasMorePages;
 
         }
 
         @Override
         public void displayErrorMessage(String message) {
             isLoading = false;
-            view.displayMessage("Failed to get feed: " + message);
+            view.displayMessage("Failed to get story: " + message);
             view.setLoadingFooter(false);
+
         }
+
         @Override
         public void displayException(Exception ex) {
             isLoading = false;
-            view.displayMessage("Failed to get feed because of exception: " + ex.getMessage());
+            view.displayMessage("Failed to get story because of exception: " + ex.getMessage());
             view.setLoadingFooter(false);
-
         }
     }
-    public void loadMoreItems(User user) {
+    public void loadMoreItems(User user){
         isLoading = true;
         view.setLoadingFooter(true);
-        statusService.loadMoreItemsFeed(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE, lastStatus, new GetFeedObserver());
+        statusService.loadMoreItemsStory(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE, lastStatus, new GetStoryObserver() );
     }
-
     private class GetUserObserver implements UserService.GetUserObserver{
 
         @Override
@@ -94,11 +104,10 @@ public class FeedPresenter {
         @Override
         public void returnUser(User user) {
             view.displayUserInfo(user);
-
         }
     }
     public void getUserProfile(String userAlias) {
-        userService.getUserProfile(Cache.getInstance().getCurrUserAuthToken(), userAlias, new GetUserObserver());
+        userService.getUserProfile(Cache.getInstance().getCurrUserAuthToken(), userAlias, new StoryPresenter.GetUserObserver());
     }
 
 }
