@@ -7,13 +7,13 @@ android {
     compileSdk 30
     defaultConfig {
 
+        testInstrumentationRunnerArguments runnerBuilder: 'de.mannodermaus.junit5.AndroidJUnit5Builder'
         applicationId "edu.byu.cs.tweeter"
         minSdkVersion 30
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        testInstrumentationRunnerArgument "runnerBuilder", "de.mannodermaus.junit5.AndroidJUnit5Builder"
     }
     buildTypes {
         release {
