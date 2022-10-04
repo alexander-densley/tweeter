@@ -28,8 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import edu.byu.cs.client.R;
-import edu.byu.cs.tweeter.client.backgroundTask.GetFollowersTask;
-import edu.byu.cs.tweeter.client.backgroundTask.GetUserTask;
+import edu.byu.cs.tweeter.client.model.service.backgroundTask.tasks.GetUserTask;
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.presenter.FollowersPresenter;
 import edu.byu.cs.tweeter.client.view.main.MainActivity;

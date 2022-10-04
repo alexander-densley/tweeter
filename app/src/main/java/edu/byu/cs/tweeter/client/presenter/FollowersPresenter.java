@@ -1,18 +1,10 @@
 package edu.byu.cs.tweeter.client.presenter;
 
-import android.os.Handler;
-import android.os.Message;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import edu.byu.cs.tweeter.client.backgroundTask.GetFollowersTask;
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.FollowService;
+import edu.byu.cs.tweeter.client.model.service.backgroundTask.observer.PagedObserver;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class FollowersPresenter {
@@ -53,10 +45,10 @@ public class FollowersPresenter {
         followService.loadMoreItemsFollowers(Cache.getInstance().getCurrUserAuthToken(),user,PAGE_SIZE,lastFollower,new GetFollowersObserver());
     }
 
-    private class GetFollowersObserver implements FollowService.GetFollowersObserver{
+    private class GetFollowersObserver implements PagedObserver<User> {
 
         @Override
-        public void addFollowers(List<User> followers, boolean hasMorePages) {
+        public void handleSuccess(List<User> followers, boolean hasMorePages) {
             isLoading = false;
             view.setLoadingFooter(false);
             lastFollower = (followers.size() > 0) ? followers.get(followers.size() - 1) : null;
@@ -65,7 +57,7 @@ public class FollowersPresenter {
         }
 
         @Override
-        public void displayErrorMessage(String message) {
+        public void handleFailure(String message) {
             isLoading = false;
             view.displayMessage("Failed to get followers: " + message);
             view.setLoadingFooter(false);
@@ -73,7 +65,7 @@ public class FollowersPresenter {
         }
 
         @Override
-        public void displayException(Exception ex) {
+        public void handleException(Exception ex) {
             isLoading = false;
             view.displayMessage("Failed to get followers because of exception: " + ex.getMessage());
             view.setLoadingFooter(false);

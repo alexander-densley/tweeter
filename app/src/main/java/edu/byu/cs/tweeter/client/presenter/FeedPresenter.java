@@ -5,6 +5,8 @@ import java.util.List;
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.StatusService;
 import edu.byu.cs.tweeter.client.model.service.UserService;
+import edu.byu.cs.tweeter.client.model.service.backgroundTask.observer.PagedObserver;
+import edu.byu.cs.tweeter.client.model.service.backgroundTask.observer.UserObserver;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
@@ -43,10 +45,10 @@ public class FeedPresenter {
     }
 
 
-    private class GetFeedObserver implements StatusService.GetFeedObserver{
+    private class GetFeedObserver implements PagedObserver<Status>{
 
         @Override
-        public void addFeed(List<Status> statuses, boolean hasMorePages) {
+        public void handleSuccess(List<Status> statuses, boolean hasMorePages) {
             isLoading = false;
             view.setLoadingFooter(false);
             lastStatus = (statuses.size() > 0) ? statuses.get(statuses.size() - 1) : null;
@@ -56,13 +58,13 @@ public class FeedPresenter {
         }
 
         @Override
-        public void displayErrorMessage(String message) {
+        public void handleFailure(String message) {
             isLoading = false;
             view.displayMessage("Failed to get feed: " + message);
             view.setLoadingFooter(false);
         }
         @Override
-        public void displayException(Exception ex) {
+        public void handleException(Exception ex) {
             isLoading = false;
             view.displayMessage("Failed to get feed because of exception: " + ex.getMessage());
             view.setLoadingFooter(false);
@@ -75,24 +77,24 @@ public class FeedPresenter {
         statusService.loadMoreItemsFeed(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE, lastStatus, new GetFeedObserver());
     }
 
-    private class GetUserObserver implements UserService.GetUserObserver{
+    private class GetUserObserver implements UserObserver {
 
         @Override
-        public void displayErrorMessage(String message) {
+        public void handleFailure(String message) {
             isLoading = false;
             view.displayMessage("Failed to get user's profile: " +  message);
             view.setLoadingFooter(false);
         }
 
         @Override
-        public void displayException(Exception ex) {
+        public void handleException(Exception ex) {
             isLoading = false;
             view.displayMessage("Failed to get user's profile because of exception: " + ex.getMessage());
             view.setLoadingFooter(false);
         }
 
         @Override
-        public void returnUser(User user) {
+        public void handleSuccess(User user) {
             view.displayUserInfo(user);
 
         }

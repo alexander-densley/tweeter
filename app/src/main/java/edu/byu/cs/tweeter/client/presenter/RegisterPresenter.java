@@ -1,25 +1,14 @@
 package edu.byu.cs.tweeter.client.presenter;
 
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.media.Image;
-import android.widget.EdgeEffect;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
-import java.util.Base64;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import edu.byu.cs.tweeter.client.backgroundTask.RegisterTask;
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.UserService;
+import edu.byu.cs.tweeter.client.model.service.backgroundTask.observer.AuthenticateUserObserver;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class RegisterPresenter implements UserService.RegisterObserver {
+public class RegisterPresenter implements AuthenticateUserObserver {
 
 
 
@@ -73,7 +62,7 @@ public class RegisterPresenter implements UserService.RegisterObserver {
         return null;
     }
     @Override
-    public void handleRegisterSuccess(User user, AuthToken authToken) {
+    public void handleSuccess(User user, AuthToken authToken) {
         view.clearInfoMessage();
         view.clearErrorMessage();
 
@@ -82,12 +71,12 @@ public class RegisterPresenter implements UserService.RegisterObserver {
     }
 
     @Override
-    public void handleRegisterFailure(String message) {
+    public void handleFailure(String message) {
         view.displayInfoMessage("Failed to register: " + message);
     }
 
     @Override
-    public void handleRegisterThrewException(Exception ex) {
+    public void handleException(Exception ex) {
         view.displayInfoMessage("Failed to register because of exception: " + ex.getMessage());
     }
 }

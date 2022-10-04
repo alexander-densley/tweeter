@@ -2,10 +2,11 @@ package edu.byu.cs.tweeter.client.presenter;
 
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.UserService;
+import edu.byu.cs.tweeter.client.model.service.backgroundTask.observer.AuthenticateUserObserver;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class LoginPresenter implements UserService.LoginObserver {
+public class LoginPresenter implements AuthenticateUserObserver {
     // the methods that the preseneter can call on the view
     public interface LoginView{
         void displayErrorMessage(String message);
@@ -47,7 +48,7 @@ public class LoginPresenter implements UserService.LoginObserver {
     }
 
     @Override
-    public void handleLoginSuccess(User user, AuthToken authToken) {
+    public void handleSuccess(User user, AuthToken authToken) {
         view.clearInfoMessage();
         view.clearErrorMessage();
 
@@ -56,12 +57,12 @@ public class LoginPresenter implements UserService.LoginObserver {
     }
 
     @Override
-    public void handleLoginFailure(String message) {
+    public void handleFailure(String message) {
         view.displayInfoMessage("Failed to login: " + message);
     }
 
     @Override
-    public void handleLoginThrewException(Exception ex) {
+    public void handleException(Exception ex) {
         view.displayInfoMessage("Failed to login because of exception: " + ex.getMessage());
 
     }
