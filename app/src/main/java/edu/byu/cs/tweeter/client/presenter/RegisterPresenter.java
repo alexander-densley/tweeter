@@ -2,41 +2,31 @@ package edu.byu.cs.tweeter.client.presenter;
 
 import android.widget.ImageView;
 
-import edu.byu.cs.tweeter.client.cache.Cache;
-import edu.byu.cs.tweeter.client.model.service.UserService;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.observer.AuthenticateUserObserver;
-import edu.byu.cs.tweeter.model.domain.AuthToken;
-import edu.byu.cs.tweeter.model.domain.User;
 
-public class RegisterPresenter implements AuthenticateUserObserver {
+public class RegisterPresenter extends AuthenticatePresenter {
+    AuthenticateView view;
+    String firstName;
+    String lastName;
+    ImageView imageToUpload;
 
-
-
-    public interface RegisterView{
-        void displayErrorMessage(String message);
-        void clearErrorMessage();
-        void displayInfoMessage(String message);
-        void clearInfoMessage();
-
-        void navigateToUser(User user);
-    }
-
-    private RegisterView view;
-    public RegisterPresenter(RegisterView view){
+    public RegisterPresenter(AuthenticateView view) {
+        super(view);
         this.view = view;
     }
 
-    public void register(String firstName, String lastName, String alias, String password, ImageView imageToUpload){
-        String errorMessage = validateRegistration(firstName, lastName, alias, password, imageToUpload);
-        if(errorMessage == null){
-            view.clearErrorMessage();
-            view.displayInfoMessage("Registering...");
-            new UserService().register(firstName, lastName, alias, password, imageToUpload, this);
+    @Override
+    protected String getDescription(boolean errOrEx) {
+        if(errOrEx){
+            return "Failed to register: ";
+        }
+        else{
+            return "Failed to get register because of exception: ";
         }
     }
 
-
-    public String validateRegistration(String firstName, String lastName, String alias, String password, ImageView imageToUpload) {
+    @Override
+    protected String validateUser(String alias, String password) {
         if (firstName.length() == 0) {
             return "First Name cannot be empty.";
         }
@@ -61,22 +51,23 @@ public class RegisterPresenter implements AuthenticateUserObserver {
         }
         return null;
     }
-    @Override
-    public void handleSuccess(User user, AuthToken authToken) {
-        view.clearInfoMessage();
-        view.clearErrorMessage();
 
-        view.displayInfoMessage("Hello " + Cache.getInstance().getCurrUser().getName());
-        view.navigateToUser(user);
+    @Override
+    protected String getAction() {
+        return "Registering...";
     }
 
     @Override
-    public void handleFailure(String message) {
-        view.displayInfoMessage("Failed to register: " + message);
+    protected void run(String alias, String password, AuthenticateUserObserver observer) {
+        userService.register(firstName, lastName, alias, password, imageToUpload, observer);
+
     }
 
-    @Override
-    public void handleException(Exception ex) {
-        view.displayInfoMessage("Failed to register because of exception: " + ex.getMessage());
+    public void setRegistrationInfo(String firstName, String lastName, ImageView imageToUpload){
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.imageToUpload = imageToUpload;
     }
+
+
 }

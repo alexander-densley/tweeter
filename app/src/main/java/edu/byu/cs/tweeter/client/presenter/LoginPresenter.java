@@ -1,40 +1,27 @@
 package edu.byu.cs.tweeter.client.presenter;
 
-import edu.byu.cs.tweeter.client.cache.Cache;
-import edu.byu.cs.tweeter.client.model.service.UserService;
 import edu.byu.cs.tweeter.client.model.service.backgroundTask.observer.AuthenticateUserObserver;
-import edu.byu.cs.tweeter.model.domain.AuthToken;
-import edu.byu.cs.tweeter.model.domain.User;
 
-public class LoginPresenter implements AuthenticateUserObserver {
-    // the methods that the preseneter can call on the view
-    public interface LoginView{
-        void displayErrorMessage(String message);
-        void clearErrorMessage();
-        void displayInfoMessage(String message);
-        void clearInfoMessage();
+public class LoginPresenter extends AuthenticatePresenter {
+    AuthenticateView view;
 
-        void navigateToUser(User user);
-
-    }
-    private LoginView view;
-    public LoginPresenter(LoginView view){
+    public LoginPresenter(AuthenticateView view) {
+        super(view);
         this.view = view;
     }
-    // the methods that the view can call on the presenter
-    public void login(String username, String password){
-        String errorMessage = validateLogin(username, password);
-        if(errorMessage == null){
-            view.clearErrorMessage();
-            view.displayInfoMessage("Logging In...");
-            new UserService().login(username, password, this);
 
-        }else{
-            view.displayErrorMessage(errorMessage);
+    @Override
+    protected String getDescription(boolean errOrEx) {
+        if(errOrEx){
+            return "Failed to login: ";
+        }
+        else{
+            return "Failed to get login because of exception: ";
         }
     }
 
-    public String validateLogin(String alias, String password) {
+    @Override
+    public String validateUser(String alias, String password) {
         if (alias.charAt(0) != '@') {
             return "Alias must begin with @.";
         }
@@ -48,28 +35,13 @@ public class LoginPresenter implements AuthenticateUserObserver {
     }
 
     @Override
-    public void handleSuccess(User user, AuthToken authToken) {
-        view.clearInfoMessage();
-        view.clearErrorMessage();
-
-        view.displayInfoMessage("Hello " + Cache.getInstance().getCurrUser().getName());
-        view.navigateToUser(user);
+    protected String getAction() {
+        return "Logging In...";
     }
 
     @Override
-    public void handleFailure(String message) {
-        view.displayInfoMessage("Failed to login: " + message);
+    protected void run(String alias, String password, AuthenticateUserObserver observer) {
+        userService.login(alias, password, observer);
     }
-
-    @Override
-    public void handleException(Exception ex) {
-        view.displayInfoMessage("Failed to login because of exception: " + ex.getMessage());
-
-    }
-
-
-
-
-    // methods related to observing the model layer
 
 }

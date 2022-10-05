@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.byu.cs.client.R;
+import edu.byu.cs.tweeter.client.presenter.PagedPresenter;
 import edu.byu.cs.tweeter.client.presenter.StoryPresenter;
 import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.Status;
@@ -39,7 +40,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 /**
  * Implements the "Story" tab.
  */
-public class StoryFragment extends Fragment implements StoryPresenter.StoryView{
+public class StoryFragment extends Fragment implements PagedPresenter.PagedView<Status>{
     private static final String LOG_TAG = "StoryFragment";
     private static final String USER_KEY = "UserKey";
 
@@ -110,7 +111,7 @@ public class StoryFragment extends Fragment implements StoryPresenter.StoryView{
     }
 
     @Override
-    public void addStory(List<Status> statuses) {
+    public void addItems(List<Status> statuses) {
         storyRecyclerViewAdapter.addItems(statuses);
     }
 
@@ -149,7 +150,7 @@ public class StoryFragment extends Fragment implements StoryPresenter.StoryView{
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    presenter.getUserProfile(userAlias.getText().toString());
+                    presenter.getUser(userAlias.getText().toString());
                     Toast.makeText(getContext(), "Getting user's profile...", Toast.LENGTH_LONG).show();
                 }
             });
@@ -186,7 +187,7 @@ public class StoryFragment extends Fragment implements StoryPresenter.StoryView{
                             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(clickable));
                             startActivity(intent);
                         } else {
-                            presenter.getUserProfile(clickable);
+                            presenter.getUser(clickable);
                             Toast.makeText(getContext(), "Getting user's profile...", Toast.LENGTH_LONG).show();
                         }
                     }
@@ -385,7 +386,7 @@ public class StoryFragment extends Fragment implements StoryPresenter.StoryView{
             int totalItemCount = layoutManager.getItemCount();
             int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
-            if (!presenter.isLoading() && presenter.HasMorePages()) {
+            if (!presenter.isLoading() && presenter.hasMorePages()) {
                 if ((visibleItemCount + firstVisibleItemPosition) >=
                         totalItemCount && firstVisibleItemPosition >= 0) {
                     // Run this code later on the UI thread

@@ -13,6 +13,7 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 
 import edu.byu.cs.client.R;
+import edu.byu.cs.tweeter.client.presenter.AuthenticatePresenter;
 import edu.byu.cs.tweeter.client.presenter.LoginPresenter;
 import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.User;
@@ -20,7 +21,7 @@ import edu.byu.cs.tweeter.model.domain.User;
 /**
  * Implements the login screen.
  */
-public class LoginFragment extends Fragment implements LoginPresenter.LoginView {
+public class LoginFragment extends Fragment implements AuthenticatePresenter.AuthenticateView {
     private static final String LOG_TAG = "LoginFragment";
 
     private Toast loginInToast;
@@ -54,7 +55,7 @@ public class LoginFragment extends Fragment implements LoginPresenter.LoginView 
 
             @Override
             public void onClick(View view) {
-                presenter.login(alias.getText().toString(), password.getText().toString());
+                presenter.authenticate(alias.getText().toString(), password.getText().toString());
             }
         });
         presenter = new LoginPresenter(this);
@@ -74,13 +75,6 @@ public class LoginFragment extends Fragment implements LoginPresenter.LoginView 
     }
 
     @Override
-    public void displayInfoMessage(String message) {
-        clearInfoMessage();
-        loginInToast = Toast.makeText(getContext(), message, Toast.LENGTH_LONG);
-        loginInToast.show();
-    }
-
-    @Override
     public void clearInfoMessage() {
         if(loginInToast != null){
             loginInToast.cancel();
@@ -95,4 +89,10 @@ public class LoginFragment extends Fragment implements LoginPresenter.LoginView 
         startActivity(intent);
     }
 
+    @Override
+    public void displayMessage(String message) {
+        clearInfoMessage();
+        loginInToast = Toast.makeText(getContext(), message, Toast.LENGTH_LONG);
+        loginInToast.show();
+    }
 }
