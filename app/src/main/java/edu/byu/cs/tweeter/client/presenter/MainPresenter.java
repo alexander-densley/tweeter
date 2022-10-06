@@ -29,8 +29,7 @@ public class MainPresenter {
     private static final String LOG_TAG = "MainActivity";
 
 
-    public interface MainView{
-        void displayMessage(String message);
+    public interface MainView extends Presenter.View{
         void setFollowersCount(int count);
         void setFollowingCount(int count);
         void setFollowButton(boolean isFollower);
@@ -46,6 +45,30 @@ public class MainPresenter {
         statusService = new StatusService();
         userService = new UserService();
     }
+    public void unfollow(User user){
+        this.user = user;
+        followService.unfollow(Cache.getInstance().getCurrUserAuthToken(),user, new UnfollowObserver());
+    }
+
+    public void updateSelectedUserFollowingAndFollowers(User user) {
+        this.user = user;
+        followService.updateSelectedUserFollowingAndFollowers(Cache.getInstance().getCurrUserAuthToken(),
+                user, new GetFollowerCountObserver(), new GetFollowingCountObserver());
+    }
+
+    public void follow(User user){
+        this.user = user;
+        followService.follow(Cache.getInstance().getCurrUserAuthToken(),user, new FollowObserver());
+    }
+    public void isFollower(User user){
+        this.user = user;
+        followService.isFollower(Cache.getInstance().getCurrUserAuthToken(), Cache.getInstance().getCurrUser()
+                , user, new IsFollowerObserver());
+    }
+
+    public void logoutUser(){
+        userService.logout(Cache.getInstance().getCurrUserAuthToken(),new LogoutObserver());
+    }
 
     public void statusPost(String post){
         try {
@@ -56,163 +79,6 @@ public class MainPresenter {
             view.displayMessage("Failed to post the status because of exception: " + ex.getMessage());
         }
     }
-
-    public void logoutUser(){
-        userService.logout(Cache.getInstance().getCurrUserAuthToken(),new LogoutObserver());
-    }
-
-    private class LogoutObserver implements SimpleNotificationObserver{
-
-        @Override
-        public void handleFailure(String message) {
-            view.displayMessage("Failed to logout: " + message);
-        }
-
-        @Override
-        public void handleException(Exception ex) {
-            view.displayMessage("Failed to logout because of exception: " + ex.getMessage());
-        }
-
-        @Override
-        public void handleSuccess() {
-            Cache.getInstance().clearCache();
-            view.logoutUser();
-
-        }
-    }
-    private class PostStatusObserver implements SimpleNotificationObserver{
-
-        @Override
-        public void handleFailure(String message) {
-            view.displayMessage("Failed to post status: " + message);
-        }
-
-        @Override
-        public void handleException(Exception ex) {
-            view.displayMessage("Failed to post status because of exception: " + ex.getMessage());
-        }
-
-        @Override
-        public void handleSuccess() {
-            view.showPostingToast(false);
-            view.displayMessage("Successfully Posted!");
-        }
-    }
-
-    public void unfollow(User user){
-        this.user = user;
-        followService.unfollow(Cache.getInstance().getCurrUserAuthToken(),user, new UnfollowObserver());
-    }
-    public void follow(User user){
-        this.user = user;
-        followService.follow(Cache.getInstance().getCurrUserAuthToken(),user, new FollowObserver());
-
-    }
-    public void isFollower(User user){
-        this.user = user;
-        followService.isFollower(Cache.getInstance().getCurrUserAuthToken(), Cache.getInstance().getCurrUser()
-        , user, new IsFollowerObserver());
-
-    }
-
-    private class IsFollowerObserver implements IsFollowObserver {
-
-        @Override
-        public void handleFailure(String message) {
-            view.displayMessage("Failed to determine following relationship: " + message);
-        }
-
-        @Override
-        public void handleException(Exception ex) {
-            view.displayMessage("Failed to determine following relationship because of exception: " + ex.getMessage());
-        }
-
-        @Override
-        public void handleSuccess(boolean isFollower) {
-            view.setFollowButton(isFollower);
-        }
-    }
-
-    private class FollowObserver implements SimpleNotificationObserver {
-
-        @Override
-        public void handleFailure(String message) {
-            view.displayMessage("Failed to unfollow: " + message);
-            view.enableFollowButton(true);
-        }
-
-        @Override
-        public void handleException(Exception ex) {
-            view.displayMessage("Failed to unfollow because of exception: " + ex.getMessage());
-            view.enableFollowButton(true);
-        }
-
-        @Override
-        public void handleSuccess() {
-            updateSelectedUserFollowingAndFollowers(user);
-            view.updateFollowButton(false);
-            view.enableFollowButton(true);
-        }
-    }
-
-    private class UnfollowObserver implements SimpleNotificationObserver{
-
-        @Override
-        public void handleFailure(String message) {
-            view.displayMessage("Failed to unfollow: " + message);
-            view.enableFollowButton(true);
-        }
-
-        @Override
-        public void handleException(Exception ex) {
-            view.displayMessage("Failed to unfollow because of exception: " + ex.getMessage());
-            view.enableFollowButton(true);
-        }
-
-        @Override
-        public void handleSuccess() {
-            updateSelectedUserFollowingAndFollowers(user);
-            view.updateFollowButton(true);
-            view.enableFollowButton(true);
-
-        }
-    }
-    private class GetFollowingCountObserver implements CountFollowObserver {
-
-        @Override
-        public void handleFailure(String message) {
-            view.displayMessage("Failed to get following count: " + message);
-        }
-
-        @Override
-        public void handleException(Exception ex) {
-            view.displayMessage("Failed to get following count because of exception: " + ex.getMessage());
-        }
-
-        @Override
-        public void handleSuccess(int count) {
-            view.setFollowingCount(count);
-        }
-    }
-
-    private class GetFollowerCountObserver implements CountFollowObserver{
-
-        @Override
-        public void handleFailure(String message) {
-            view.displayMessage("Failed to get followers count: " + message);
-        }
-
-        @Override
-        public void handleException(Exception ex) {
-            view.displayMessage("Failed to get followers count because of exception: " + ex.getMessage());
-        }
-
-        @Override
-        public void handleSuccess(int count) {
-            view.setFollowersCount(count);
-        }
-    }
-
 
     public String getFormattedDateTime() throws ParseException {
         SimpleDateFormat userFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
@@ -278,11 +144,138 @@ public class MainPresenter {
         }
     }
 
-    public void updateSelectedUserFollowingAndFollowers(User user) {
 
-        this.user = user;
-        followService.updateSelectedUserFollowingAndFollowers(Cache.getInstance().getCurrUserAuthToken(),
-                user, new GetFollowerCountObserver(), new GetFollowingCountObserver());
+    private abstract class BaseCountObserver implements CountFollowObserver{
 
+        @Override
+        public void handleSuccess(int count) {
+            handleCountSuccess(count);
+        }
+
+        @Override
+        public void handleFailure(String message) {
+            view.displayMessage("Failed to get " + getObserverName() + ": " + message);
+        }
+
+        @Override
+        public void handleException(Exception ex) {
+            view.displayMessage("Failed to get " + getObserverName() + " because of exception: " + ex.getMessage());
+        }
+        public abstract void handleCountSuccess(int count);
+        protected abstract String getObserverName();
+    }
+
+    private class GetFollowingCountObserver extends BaseCountObserver {
+        @Override
+        public void handleCountSuccess(int count) {
+            view.setFollowingCount(count);
+        }
+
+        @Override
+        protected String getObserverName() {
+            return "following count";
+        }
+    }
+
+    private class GetFollowerCountObserver extends BaseCountObserver {
+        @Override
+        public void handleCountSuccess(int count) {
+            view.setFollowersCount(count);
+        }
+
+        @Override
+        protected String getObserverName() {
+            return "followers count";
+        }
+    }
+
+    public abstract class BaseSimpleNotificationObserver implements SimpleNotificationObserver {
+        @Override
+        public void handleSuccess() {
+            handleSimpleSuccess();
+        }
+
+        @Override
+        public void handleFailure(String message) {
+            view.displayMessage("Failed to get " + getObserverName() + ": " + message);
+        }
+
+        @Override
+        public void handleException(Exception exception) {
+            view.displayMessage("Failed to get " + getObserverName() + " because of exception: " + exception.getMessage());
+        }
+
+        public abstract void handleSimpleSuccess();
+        protected abstract String getObserverName();
+    }
+
+    private class LogoutObserver extends BaseSimpleNotificationObserver {
+        @Override
+        public void handleSimpleSuccess() {
+            Cache.getInstance().clearCache();
+            view.logoutUser();
+        }
+
+        @Override
+        protected String getObserverName() {
+            return "logout";
+        }
+    }
+    private class PostStatusObserver extends BaseSimpleNotificationObserver {
+
+        @Override
+        public void handleSimpleSuccess() {
+            view.showPostingToast(false);
+            view.displayMessage("Successfully Posted!");
+        }
+        @Override
+        protected String getObserverName() {
+            return "post status";
+        }
+    }
+
+    private class FollowObserver extends BaseSimpleNotificationObserver {
+        @Override
+        public void handleSimpleSuccess() {
+            updateSelectedUserFollowingAndFollowers(user);
+            view.updateFollowButton(false);
+            view.enableFollowButton(true);
+        }
+        @Override
+        protected String getObserverName() {
+            return "follow";
+        }
+    }
+
+    private class UnfollowObserver extends BaseSimpleNotificationObserver {
+        @Override
+        public void handleSimpleSuccess() {
+            updateSelectedUserFollowingAndFollowers(user);
+            view.updateFollowButton(true);
+            view.enableFollowButton(true);
+        }
+        @Override
+        protected String getObserverName() {
+            return "unfollow";
+        }
+    }
+
+
+    private class IsFollowerObserver implements IsFollowObserver {
+
+        @Override
+        public void handleFailure(String message) {
+            view.displayMessage("Failed to determine following relationship: " + message);
+        }
+
+        @Override
+        public void handleException(Exception ex) {
+            view.displayMessage("Failed to determine following relationship because of exception: " + ex.getMessage());
+        }
+
+        @Override
+        public void handleSuccess(boolean isFollower) {
+            view.setFollowButton(isFollower);
+        }
     }
 }
