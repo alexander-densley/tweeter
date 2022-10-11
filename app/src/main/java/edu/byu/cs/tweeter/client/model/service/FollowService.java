@@ -22,54 +22,45 @@ import edu.byu.cs.tweeter.client.model.service.backgroundTask.tasks.UnfollowTask
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class FollowService {
+public class FollowService extends Service{
 
 
-    public void loadMoreItemsFollowers(AuthToken currUserAuthToken, User user, int pageSize, User lastFollower, PagedObserver<User> getFollowersObserver) {
+    public void loadMoreItemsFollowers(AuthToken currUserAuthToken, User user, int pageSize, User lastFollower, PagedObserver<User> observer) {
         GetFollowersTask getFollowersTask = new GetFollowersTask(currUserAuthToken,
-                user, pageSize, lastFollower, new PageNotificationHandler(getFollowersObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(getFollowersTask);}
-
-    public void unfollow(AuthToken currUserAuthToken, User user, SimpleNotificationObserver unfollowObserver) {
-        UnfollowTask unfollowTask = new UnfollowTask(currUserAuthToken,
-                user, new SimpleNotificationHandler(unfollowObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(unfollowTask);
+                user, pageSize, lastFollower, new PageNotificationHandler(observer));
+        runTask(getFollowersTask);
     }
-    public void follow(AuthToken currUserAuthToken, User user, SimpleNotificationObserver followObserver){
+    public void unfollow(AuthToken currUserAuthToken, User user, SimpleNotificationObserver observer) {
+        UnfollowTask unfollowTask = new UnfollowTask(currUserAuthToken,
+                user, new SimpleNotificationHandler(observer));
+        runTask(unfollowTask);
+    }
+    public void follow(AuthToken currUserAuthToken, User user, SimpleNotificationObserver observer){
         FollowTask followTask = new FollowTask(currUserAuthToken,
-                user, new SimpleNotificationHandler(followObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(followTask);
+                user, new SimpleNotificationHandler(observer));
+        runTask(followTask);
     }
 
     public void updateSelectedUserFollowingAndFollowers(AuthToken currUserAuthToken, User user, CountFollowObserver followerCountObserver, CountFollowObserver followingCountObserver) {
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-
-        // Get count of most recently selected user's followers.
         GetFollowersCountTask followersCountTask = new GetFollowersCountTask(currUserAuthToken,
                 user, new CountFollowHandler(followerCountObserver));
-        executor.execute(followersCountTask);
+        runTask(followersCountTask);
 
-        // Get count of most recently selected user's followees (who they are following)
         GetFollowingCountTask followingCountTask = new GetFollowingCountTask(Cache.getInstance().getCurrUserAuthToken(),
                 user, new CountFollowHandler(followingCountObserver));
-        executor.execute(followingCountTask);
+        runTask(followingCountTask);
     }
 
     public void isFollower(AuthToken currUserAuthToken, User currUser, User user, IsFollowObserver isFollowerObserver) {
         IsFollowerTask isFollowerTask = new IsFollowerTask(currUserAuthToken,
                 currUser, user, new IsFollowerHandler(isFollowerObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(isFollowerTask);
+        runTask(isFollowerTask);
     }
 
     public void loadMoreItemsFollowing(AuthToken currUserAuthToken, User user, int pageSize, User lastFollowee, PagedObserver getFollowingObserver) {
         GetFollowingTask getFollowingTask = new GetFollowingTask(currUserAuthToken,
                 user, pageSize, lastFollowee, new PageNotificationHandler<User>(getFollowingObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(getFollowingTask);
+        runTask(getFollowingTask);
     }
 
 
