@@ -22,7 +22,7 @@ public class MainPresenter {
 
     private final MainView view;
     private final FollowService followService;
-    private final StatusService statusService;
+    private StatusService statusService;
     private final UserService userService;
     private User user;
 
@@ -42,9 +42,17 @@ public class MainPresenter {
     public MainPresenter(MainView view){
         this.view = view;
         followService = new FollowService();
-        statusService = new StatusService();
+        statusService = getStatusService();
         userService = new UserService();
     }
+
+    protected StatusService getStatusService(){
+        if(statusService == null){
+            statusService = new StatusService();
+        }
+        return new StatusService();
+    }
+
     public void unfollow(User user){
         this.user = user;
         followService.unfollow(Cache.getInstance().getCurrUserAuthToken(),user, new UnfollowObserver());
@@ -72,7 +80,7 @@ public class MainPresenter {
 
     public void statusPost(String post){
         try {
-            statusService.postStatus(Cache.getInstance().getCurrUserAuthToken(), Cache.getInstance().getCurrUser(),
+            getStatusService().postStatus(Cache.getInstance().getCurrUserAuthToken(), Cache.getInstance().getCurrUser(),
                     post, getFormattedDateTime(), parseURLs(post), parseMentions(post), new PostStatusObserver());
         } catch (Exception ex) {
             Log.e(LOG_TAG, ex.getMessage(), ex);
@@ -259,7 +267,6 @@ public class MainPresenter {
             return "unfollow";
         }
     }
-
 
     private class IsFollowerObserver implements IsFollowObserver {
 
