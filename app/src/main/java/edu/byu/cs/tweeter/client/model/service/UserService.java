@@ -23,47 +23,38 @@ import edu.byu.cs.tweeter.client.model.service.backgroundTask.tasks.RegisterTask
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class UserService {
+public class UserService extends Service {
 
 
     public void logout(AuthToken authToken, SimpleNotificationObserver logoutObserver){
         LogoutTask logoutTask = new LogoutTask(authToken, new SimpleNotificationHandler(logoutObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(logoutTask);
+        runTask(logoutTask);
     }
 
     public void register(String firstName, String lastName, String alias, String password, ImageView imageToUpload, AuthenticateUserObserver observer){
-        // Convert image to byte array.
         Bitmap image = ((BitmapDrawable) imageToUpload.getDrawable()).getBitmap();
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, 100, bos);
         byte[] imageBytes = bos.toByteArray();
 
-        // Intentionally, Use the java Base64 encoder so it is compatible with M4.
         String imageBytesBase64 = Base64.getEncoder().encodeToString(imageBytes);
 
-        // Send register request.
         RegisterTask registerTask = new RegisterTask(firstName, lastName,
                 alias, password, imageBytesBase64, new AuthenticateUserHandler(observer));
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(registerTask);
+        runTask(registerTask);
 
     }
 
-
     public void login(String username, String password, AuthenticateUserObserver observer){
-        // Send the login request.
         LoginTask loginTask = new LoginTask(username, password, new AuthenticateUserHandler(observer));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(loginTask);
+        runTask(loginTask);
     }
 
 
     public void getUserProfile(AuthToken currUserAuthToken, String toString, UserObserver getUserObserver) {
         GetUserTask getUserTask = new GetUserTask(currUserAuthToken, toString, new GetUserHandler(getUserObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(getUserTask);
+        runTask(getUserTask);
     }
 
 

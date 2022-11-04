@@ -15,16 +15,14 @@ import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
-public class StatusService {
+public class StatusService extends Service{
 
 
-    public void postStatus(AuthToken currUserAuthToken, User currUser, String post, String formattedDateTime, List<String> parseURLs,
-                           List<String> parseMentions, SimpleNotificationObserver postStatusObserver){
+    public void postStatus(AuthToken currUserAuthToken, User currUser, String post, String formattedDateTime, List<String> parseURLs, List<String> parseMentions, SimpleNotificationObserver postStatusObserver){
         Status newStatus = new Status(post, currUser, formattedDateTime, parseURLs, parseMentions);
         PostStatusTask statusTask = new PostStatusTask(currUserAuthToken,
                 newStatus, new SimpleNotificationHandler(postStatusObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(statusTask);
+        runTask(statusTask);
     }
 
 
@@ -32,16 +30,14 @@ public class StatusService {
     public void loadMoreItemsStory(AuthToken currUserAuthToken, User user, int pageSize, Status lastStatus, PagedObserver getStoryObserver){
         GetStoryTask getUserTask = new GetStoryTask(currUserAuthToken,
                 user, pageSize, lastStatus, new PageNotificationHandler<Status>(getStoryObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(getUserTask);
+        runTask(getUserTask);
     }
 
 
     public void loadMoreItemsFeed(AuthToken currUserAuthToken, User user, int pageSize, Status lastStatus, PagedObserver getFeedObserver){
         GetFeedTask getFeedTask = new GetFeedTask(currUserAuthToken,
                 user, pageSize, lastStatus, new PageNotificationHandler<Status>(getFeedObserver));
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(getFeedTask);
+        runTask(getFeedTask);
     }
 
 }
